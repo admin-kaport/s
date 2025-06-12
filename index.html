@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dosya Dönüştürücü</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #2c003e, #1e1e40, #000);
+      color: #eee;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    header {
+      background: linear-gradient(to right, #2c003e, #1e1e40, #000);
+      padding: 20px;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: white;
+      margin: 0;
+    }
+
+    h1 {
+      color: #00bcd4;
+      margin-top: 40px;
+    }
+
+    input, select, button {
+      margin: 1rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #00bcd4;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0097a7;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+    }
+
+     .sosyal-medya a {
+            color: #6702ba;
+            margin: 0 1rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .sosyal-medya a:hover {
+            color: #0097a7;
+            text-decoration: underline;
+        }
+    footer {
+    background: linear-gradient(to right, #2c003e, #1e1e40, #000); /* Uyumlu degrade eklendi */
+    text-align: center;
+    padding: 1.5rem 1rem;
+    color: #777;
+    font-size: 0.9rem;
+    margin-top: 3rem;
+}
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo"><h1>🛠️ Çoklu Dosya Dönüştürücü</h1></div>
+  </header>
+
+  <main>
+    <div class="container">
+
+
+      <input type="file" id="fileInput" accept="image/*" multiple />
+
+      <br>
+      <label>Hedef Format:</label>
+      <select id="formatSelect">
+        <option value="png">PNG</option>
+        <option value="jpg">JPG</option>
+        <option value="webp">WEBP</option>
+        <option value="pdf">PDF (hepsi tek PDF olur)</option>
+      </select>
+
+      <br>
+      <button onclick="convertFiles()">Tümünü Dönüştür</button>
+
+      <p id="status"></p>
+    </div>
+  </main>
+
+  <script>
+    async function convertFiles() {
+      const files = document.getElementById('fileInput').files;
+      const format = document.getElementById('formatSelect').value;
+      const status = document.getElementById('status');
+      if (files.length === 0) {
+        alert("Lütfen dosya(lar) seçin.");
+        return;
+      }
+
+      if (format === 'pdf') {
+        const pdf = new window.jspdf.jsPDF();
+        let y = 10;
+        for (const file of files) {
+          const dataURL = await readFileAsDataURL(file);
+          const img = new Image();
+          img.src = dataURL;
+          await new Promise(resolve => img.onload = resolve);
+          pdf.addImage(img, 'JPEG', 10, y, 180, 160);
+          y += 170;
+          if (y > 270) {
+            pdf.addPage();
+            y = 10;
+          }
+        }
+        pdf.save('hepsi.pdf');
+        status.textContent = "Tüm görseller PDF olarak kaydedildi.";
+        return;
+      }
+
+      for (const file of files) {
+        const dataURL = await readFileAsDataURL(file);
+        const img = new Image();
+        img.src = dataURL;
+        await new Promise(resolve => img.onload = resolve);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        const mimeType = {
+          png: 'image/png',
+          jpg: 'image/jpeg',
+          webp: 'image/webp'
+        }[format];
+
+        canvas.toBlob(blob => {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = file.name.split('.')[0] + '.' + format;
+          link.click();
+        }, mimeType);
+      }
+
+      status.textContent = "Tüm dosyalar dönüştürüldü!";
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+  </script>
+   <footer>
+
+        <div class="sosyal-medya">
+       <h1/>
+            <a href="https://instagram.com/uq.wst" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://github.com/admin-kaport" target="_blank" rel="noopener noreferrer">GitHub</a>
+       </h1>
+        </div>
+    </footer>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</body>
+</html>
